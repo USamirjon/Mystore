@@ -1,0 +1,14 @@
+﻿using AutoMapper;
+using MyStore.DTOs;
+using MyStore.Models;
+
+namespace MyStore.Helpers;
+
+public class MappingProfile: Profile
+{
+    public MappingProfile()
+    {
+        CreateMap<Product, ProductResponseDto>();
+        CreateMap<ProductCreateDto, Product>();
+    }
+}
