@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using MyStore.Data; 
+using MyStore.Data;
+using MyStore.Middleware;
+using MyStore.Repositories;
+using MyStore.Services;
 using Npgsql.EntityFrameworkCore.PostgreSQL; // не обязательно явно, но для надёжности
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +18,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // 3. AutoMapper — для маппинга моделей в DTO (пока только регистрируем)
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // 4. CORS — разрешаем React-фронтенду обращаться к API
 builder.Services.AddCors(options =>
@@ -29,6 +36,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 // 5. Настройка middleware 
 if (app.Environment.IsDevelopment())
 {
