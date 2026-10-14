@@ -1,6 +1,6 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyStore", "MyStore\MyStore.csproj", "{13566B85-CB74-47FE-813E-B33099823010}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyStore-server", "MyStore-server\MyStore-server.csproj", "{13566B85-CB74-47FE-813E-B33099823010}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
