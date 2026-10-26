@@ -23,14 +23,17 @@ public class UsersController: ControllerBase
             return BadRequest();
         return CreatedAtAction(nameof(GetById), new { id = user.UserId }, user);
     }
-
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
     {
-        var user = await _userService.LoginAsync(dto);
-        if (user == null)
+        var result = await _userService.LoginAsync(dto);
+        if (result == null)
             return Unauthorized();
-        return Ok(user);
+        return Ok(new 
+        { 
+            user = result.Value.User, 
+            token = result.Value.Token 
+        });
     }
 
     [HttpGet]

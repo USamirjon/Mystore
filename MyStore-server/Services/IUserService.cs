@@ -6,6 +6,6 @@ namespace MyStore.Services;
 public interface IUserService
 {
     Task<UserResponseDto?> RegisterAsync(UserRegisterDto dto);
-    Task<UserResponseDto?> LoginAsync(UserLoginDto dto);
+    Task<(UserResponseDto User, string Token)?> LoginAsync(UserLoginDto dto);
     Task<UserResponseDto?> GetByIdAsync(int id);
 }

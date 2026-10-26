@@ -1,4 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MyStore.Data;
 using MyStore.Middleware;
 using MyStore.Repositories;
@@ -23,12 +26,27 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
 // 4. CORS — разрешаем React-фронтенду обращаться к API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")   // здесь порт вашего React-приложения
+        policy.WithOrigins("http://localhost:5173")   
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -44,9 +62,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();     // Перенаправляем HTTP на HTTPS
-app.UseCors("AllowReactApp");  // Включаем CORS (до UseAuthorization)
-app.UseAuthorization();        // Авторизация (пока не используется, но оставим)
+app.UseCors("AllowReactApp");
+app.UseHttpsRedirection(); // Включаем CORS (до UseAuthorization)
+app.UseAuthentication(); // Проверяет, валиден ли токен в запросе
+app.UseAuthorization();  // Проверяет, есть ли права на это действие
 app.MapControllers();          // Активируем маршруты контроллеров
 
 app.Run();                     // Запускаем сервер

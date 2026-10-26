@@ -10,6 +10,7 @@
     <ItemGroup>
         <PackageReference Include="Argon2id.PasswordHasher" Version="1.0.0" />
         <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.12" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.11">
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
           <PrivateAssets>all</PrivateAssets>
