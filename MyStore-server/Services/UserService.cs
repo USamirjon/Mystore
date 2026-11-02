@@ -4,7 +4,8 @@ using MyStore.DTOs;
 using MyStore.Exceptions;
 using MyStore.Models;
 using MyStore.Repositories;
-using System.IdentityModel.Tokens.Jwt; 
+using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.InteropServices.JavaScript;
 using System.Security.Claims;          
 using Microsoft.IdentityModel.Tokens;  
 using System.Text;                     
@@ -17,13 +18,19 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration; 
-
-    public UserService(IUserRepository userRepository, IMapper mapper, IConfiguration configuration) 
+    private readonly IProductRepository _productRepository; 
+    public UserService(
+        IUserRepository userRepository, 
+        IProductRepository productRepository,
+        IMapper mapper, 
+        IConfiguration configuration
+        ) 
     {
         _passwordHasher = new Argon2idPasswordHasher();
         _userRepository = userRepository;
         _mapper = mapper;
         _configuration = configuration; 
+        _productRepository = productRepository;
     }
 
     public async Task<UserResponseDto?> RegisterAsync(UserRegisterDto dto)
@@ -63,7 +70,62 @@ public class UserService : IUserService
             return null;
         return _mapper.Map<UserResponseDto>(user);
     }
+    
+    public async Task<decimal> DepositAsync(int userId, decimal amount)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new UserNotFound(userId);
+        }
+        user.Wallet+=amount;
+        await _userRepository.UpdateAsync(user); 
+        return user.Wallet;
+        
+    }
+    public async Task<decimal> PurchaseAsync(int userId, int productId, int quantity)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new UserNotFound(userId);
+        }
+        var product = await _productRepository.GetByIdAsync(productId);
+        if (product == null)
+        {
+            throw new Exception("Товар не найден");
+        }
 
+        if (product.StockQuantity < quantity)
+        {
+            throw new Exception("Недостаточно товара на складе");
+        }
+        decimal totalCost = product.ProductPrice * quantity;
+        if (totalCost > user.Wallet)
+        {
+            throw new Exception("Недостаточно средств");
+        }
+        user.Wallet -= totalCost;
+        product.StockQuantity -= quantity;
+    
+        await _userRepository.UpdateAsync(user);
+        await _productRepository.UpdateAsync(product); 
+    
+        return user.Wallet;
+        
+    }
+    public async Task<UserResponseDto> UpdateProfileAsync(int userId, string? imageUrl)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new UserNotFound(userId);
+        }
+        user.ImageUrl = imageUrl;
+        await _userRepository.UpdateAsync(user);
+        return _mapper.Map<UserResponseDto>(user);
+        
+    }
     private string GenerateJwtToken(User user)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
@@ -86,4 +148,5 @@ public class UserService : IUserService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+    
 }
